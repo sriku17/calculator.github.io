@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Advanced Scientific Calculator</title>
+  <style>
+    body {
+      background-color: #111;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .calculator {
+      background: #222;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      width: 380px;
+    }
+
+    .display {
+      background: #000;
+      color: #0f0;
+      font-size: 26px;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      text-align: right;
+      overflow-x: auto;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    button {
+      padding: 15px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      background: #444;
+      color: #fff;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #555;
+    }
+
+    .func { background: #2962ff; }
+    .func:hover { background: #448aff; }
+
+    .equal { background: #00c853; color: #000; }
+    .equal:hover { background: #00e676; }
+
+    .memory { background: #ff9100; }
+    .memory:hover { background: #ffab40; }
+
+    .angle-toggle {
+      grid-column: span 5;
+      background: #880e4f;
+      color: white;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="calculator">
+    <div class="display" id="display">0</div>
+    <div class="buttons">
+      <button class="func" onclick="append('sin(')">sin</button>
+      <button class="func" onclick="append('cos(')">cos</button>
+      <button class="func" onclick="append('tan(')">tan</button>
+      <button class="func" onclick="append('ln(')">ln</button>
+      <button class="func" onclick="append('log(')">log</button>
+
+      <button class="func" onclick="append('√(')">√</button>
+      <button class="func" onclick="append('^')">^</button>
+      <button class="func" onclick="append('(')">(</button>
+      <button class="func" onclick="append(')')">)</button>
+      <button onclick="deleteLast()">DEL</button>
+
+      <button class="memory" onclick="memoryClear()">MC</button>
+      <button class="memory" onclick="memoryRecall()">MR</button>
+      <button class="memory" onclick="memoryAdd()">M+</button>
+      <button class="memory" onclick="memorySubtract()">M−</button>
+      <button onclick="clearDisplay()">C</button>
+
+      <button onclick="append('7')">7</button>
+      <button onclick="append('8')">8</button>
+      <button onclick="append('9')">9</button>
+      <button onclick="append('/')">÷</button>
+      <button class="func" onclick="append('π')">π</button>
+
+      <button onclick="append('4')">4</button>
+      <button onclick="append('5')">5</button>
+      <button onclick="append('6')">6</button>
+      <button onclick="append('*')">×</button>
+      <button class="func" onclick="append('e')">e</button>
+
+      <button onclick="append('1')">1</button>
+      <button onclick="append('2')">2</button>
+      <button onclick="append('3')">3</button>
+      <button onclick="append('-')">−</button>
+      <button class="func" onclick="append('^2')">x²</button>
+
+      <button onclick="append('0')">0</button>
+      <button onclick="append('.')">.</button>
+      <button onclick="append('%')">%</button>
+      <button onclick="append('+')">+</button>
+      <button class="equal" onclick="calculate()">=</button>
+
+      <button class="func" onclick="append('!')">x!</button>
+      <button class="func" onclick="append('exp(')">exp</button>
+      <button class="func" onclick="useAns()">ANS</button>
+      <button class="angle-toggle" onclick="toggleAngle()">Mode: <span id="mode">RAD</span></button>
+    </div>
+  </div>
+
+  <script>
+    const display = document.getElementById("display");
+    const modeLabel = document.getElementById("mode");
+    let angleMode = "RAD"; // RAD or DEG
+    let memory = 0;
+    let lastAns = 0;
+
+    function append(value) {
+      if (display.innerText === "0") {
+        display.innerText = value;
+      } else {
+        display.innerText += value;
+      }
+    }
+
+    function clearDisplay() {
+      display.innerText = "0";
+    }
+
+    function deleteLast() {
+      display.innerText = display.innerText.slice(0, -1) || "0";
+    }
+
+    function useAns() {
+      append(lastAns);
+    }
+
+    function toggleAngle() {
+      angleMode = angleMode === "RAD" ? "DEG" : "RAD";
+      modeLabel.innerText = angleMode;
+    }
+
+    function memoryClear() {
+      memory = 0;
+    }
+
+    function memoryRecall() {
+      append(memory);
+    }
+
+    function memoryAdd() {
+      memory += Number(evalExpression(display.innerText));
+    }
+
+    function memorySubtract() {
+      memory -= Number(evalExpression(display.innerText));
+    }
+
+    function factorial(n) {
+      if (n < 0) return NaN;
+      if (n === 0 || n === 1) return 1;
+      return n * factorial(n - 1);
+    }
+
+    function calculate() {
+      try {
+        const result = evalExpression(display.innerText);
+        lastAns = result;
+        display.innerText = result;
+      } catch (e) {
+        display.innerText = "Error";
+      }
+    }
+
+    function evalExpression(expr) {
+      let input = expr
+        .replace(/π/g, Math.PI)
+        .replace(/e/g, Math.E)
+        .replace(/√\(/g, "Math.sqrt(")
+        .replace(/log\(/g, "Math.log10(")
+        .replace(/ln\(/g, "Math.log(")
+        .replace(/exp\(/g, "Math.exp(")
+        .replace(/(\d+)!/g, (_, n) => factorial(Number(n)))
+        .replace(/(\d+)\^2/g, "Math.pow($1, 2)")
+        .replace(/(\d+)\^(\d+)/g, "Math.pow($1, $2)");
+
+      input = input
+        .replace(/sin\(/g, angleMode === "DEG" ? "Math.sin(degToRad(" : "Math.sin(")
+        .replace(/cos\(/g, angleMode === "DEG" ? "Math.cos(degToRad(" : "Math.cos(")
+        .replace(/tan\(/g, angleMode === "DEG" ? "Math.tan(degToRad(" : "Math.tan(");
+
+      return eval(input);
+    }
+
+    function degToRad(deg) {
+      return deg * (Math.PI / 180);
+    }
+
+    // Keyboard input support
+    document.addEventListener("keydown", (e) => {
+      const allowed = "0123456789+-*/().";
+      if (allowed.includes(e.key)) append(e.key);
+      if (e.key === "Enter") calculate();
+      if (e.key === "Backspace") deleteLast();
+      if (e.key === "c" || e.key === "C") clearDisplay();
+    });
+  </script>
+</body>
+</html>
